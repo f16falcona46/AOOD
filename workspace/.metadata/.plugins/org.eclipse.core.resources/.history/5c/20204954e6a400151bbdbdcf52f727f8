@@ -1,0 +1,7 @@
+import java.awt.Graphics;
+import java.awt.Point;
+
+public abstract class CircuitComponent {
+	abstract void draw(Graphics g, Point location);
+	abstract boolean
+}

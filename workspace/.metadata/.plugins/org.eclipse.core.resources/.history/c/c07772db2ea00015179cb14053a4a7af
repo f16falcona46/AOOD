@@ -1,0 +1,42 @@
+
+public class PolynomialGrapherTester3 extends PolynomialGrapher {
+
+	@Override
+	public double[] coefficients() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public double xIncrement() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public Coordinate xyStart() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public double xRange() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public double yRange() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	/**
+	 * @param args
+	 */
+	public static void main(String[] args) {
+		// TODO Auto-generated method stub
+
+	}
+
+}

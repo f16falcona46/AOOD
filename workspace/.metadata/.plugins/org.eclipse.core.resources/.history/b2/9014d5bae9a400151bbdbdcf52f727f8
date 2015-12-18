@@ -1,0 +1,10 @@
+import java.awt.Graphics;
+import java.awt.Point;
+
+public abstract class CircuitComponent {
+	abstract public void draw(Graphics g, Point location);
+	abstract public void setI(double current);
+	abstract public void setV(double voltage);
+	abstract public double getI();
+	abstract public double getV();
+}

@@ -1,0 +1,5 @@
+#Wed Oct 08 13:36:32 EDT 2014
+__DEFAULT__=false
+org.eclipse.sdk.Eclipse.master=true
+org.eclipse.help.ui.localSearch.master=true
+expression=import

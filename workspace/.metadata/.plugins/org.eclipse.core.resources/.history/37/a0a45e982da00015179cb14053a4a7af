@@ -1,0 +1,35 @@
+
+public abstract class PolynomialGrapher extends FunctionGrapher {
+	abstract public double[] coefficients();
+	
+	@Override
+	public double xIncrement() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public double yValue(double xValue) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public Coordinate xyStart() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public double xRange() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public double yRange() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+}

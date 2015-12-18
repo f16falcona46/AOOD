@@ -1,0 +1,108 @@
+import java.util.ArrayList;
+import java.util.Arrays;
+
+
+public class RPLComplex extends RPLObject {
+	private RPLReal realPart;
+	private RPLReal imagPart;
+	private static final ArrayList<String> supportedOpsAL = new ArrayList<String>(Arrays.asList(new String[]{"+","-","*","/","SIN","COS","TAN","ASIN","ACOS","ATAN","EXP","LN", "C->R", "EVAL"}));
+	
+	public RPLComplex(String init) {
+		super(init);
+	}
+
+	@Override
+	public void set(String input) {
+		realPart = new RPLReal("0.0");
+		imagPart = new RPLReal("0.0");
+		input = input.substring( 1, input.length() - 1 );
+		String[] cplxParts = input.split(",");
+		realPart.set(cplxParts[0]);
+		imagPart.set(cplxParts[1]);
+	}
+
+	@Override
+	public int getType() {
+		return 1;
+	}
+
+	@Override
+	public String toString() {
+		return "(" + realPart + "," + imagPart + ")";
+	}
+
+	@Override
+	public ArrayList<String> supportedOps() {
+		return supportedOpsAL;
+	}
+
+	@Override
+	public void doOp(String op, RPLStack stack) throws BadOpException {
+		try {
+			stack.pop();
+			RPLObject other=null;//imag lv 1 real lv 2
+
+			switch (supportedOpsAL.indexOf(op)) {
+//			case 0:
+//				other = stack.pop();
+//				realPart.doOp("+", stack)
+//				this.set(Double.toString());
+//				break;
+//			case 1:
+//				other = stack.pop();
+//				this.set(Double.toString(Double.parseDouble(other.toString())-data));
+//				break;
+//			case 2:
+//				other = stack.pop();
+//				this.set(Double.toString(Double.parseDouble(other.toString())*data));
+//				break;
+//			case 3:
+//				other = stack.pop();
+//				this.set(Double.toString(Double.parseDouble(other.toString())/data));
+//				break;
+//			case 4:
+//				this.set(Double.toString(Math.sin(data)));
+//				break;
+//			case 5:
+//				this.set(Double.toString(Math.cos(data)));
+//				break;
+//			case 6:
+//				this.set(Double.toString(Math.tan(data)));
+//				break;
+//			case 7:
+//				this.set(Double.toString(Math.asin(data)));
+//				break;
+//			case 8:
+//				this.set(Double.toString(Math.acos(data)));
+//				break;
+//			case 9:
+//				this.set(Double.toString(Math.atan(data)));
+//				break;
+//			case 10:
+//				this.set(Double.toString(Math.exp(data)));
+//				break;
+//			case 11:
+//				this.set(Double.toString(Math.log(data)));
+//				break;
+			case 12:
+				stack.push(realPart);
+				stack.push(imagPart);
+				break;
+			default:
+				stack.push(this);
+				break;
+			}
+		}
+		catch (Exception e) {
+			stack.push(this);
+			throw new BadOpException();
+		}
+	}
+
+	@Override
+	public RPLObject copy() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+}

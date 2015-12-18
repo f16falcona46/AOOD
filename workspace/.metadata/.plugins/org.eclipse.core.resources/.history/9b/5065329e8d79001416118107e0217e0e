@@ -1,0 +1,9 @@
+public abstract class BlackjackPlayer {
+	public abstract boolean hit(BlackjackHand dealerHand, BlackjackHand playerHand); //t
+	public abstract void dealerHit(BlackjackHand dealerHand);
+	public abstract void playerBusts(BlackjackHand playerHand); //t
+	public abstract void playerTies(BlackjackHand playerHand, BlackjackHand dealerHand);
+	public abstract void playerWins(BlackjackHand playerHand, BlackjackHand dealerHand);
+	public abstract void dealerBusts(BlackjackHand dealerHand); //t
+	public abstract void dealerWins(BlackjackHand dealerHand, BlackjackHand playerHand);
+}

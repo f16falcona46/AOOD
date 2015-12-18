@@ -1,0 +1,106 @@
+import java.util.ArrayList;
+import java.util.Arrays;
+
+public class RPLReal extends RPLObject {
+	private double data;
+	private static final ArrayList<String> supportedOpsAL = new ArrayList<String>(Arrays.asList(new String[]{"+","-","*","/","SIN","COS","TAN","ASIN","ACOS","ATAN","EXP","LN", "R->C","EVAL"}));
+	
+	RPLReal(String init) {
+		super(init);
+	}
+	
+	@Override
+	public void set(String input) {
+		data=Double.parseDouble(input);
+	}
+
+	@Override
+	public int getType() {
+		return 0;
+	}
+
+	@Override
+	public String toString() {
+		return Double.toString(data);
+	}
+
+	@Override
+	public ArrayList<String> supportedOps() {
+		return supportedOpsAL;
+	}
+
+	@Override
+	public void doOp(String op, RPLStack stack) throws BadOpException {
+		try {
+			/*
+		TestRPLObject newOb = new TestRPLObject();
+		newOb.set(Integer.toString(supportedOpsAL.indexOf(op)));
+		stack.push(newOb);
+			 */
+			stack.pop();
+			RPLObject other=null;
+
+			switch (supportedOpsAL.indexOf(op)) {
+			case 0:
+				other = stack.pop();
+				this.set(Double.toString(Double.parseDouble(other.toString())+data));
+				break;
+			case 1:
+				other = stack.pop();
+				this.set(Double.toString(Double.parseDouble(other.toString())-data));
+				break;
+			case 2:
+				other = stack.pop();
+				this.set(Double.toString(Double.parseDouble(other.toString())*data));
+				break;
+			case 3:
+				other = stack.pop();
+				this.set(Double.toString(Double.parseDouble(other.toString())/data));
+				break;
+			case 4:
+				this.set(Double.toString(Math.sin(data)));
+				break;
+			case 5:
+				this.set(Double.toString(Math.cos(data)));
+				break;
+			case 6:
+				this.set(Double.toString(Math.tan(data)));
+				break;
+			case 7:
+				this.set(Double.toString(Math.asin(data)));
+				break;
+			case 8:
+				this.set(Double.toString(Math.acos(data)));
+				break;
+			case 9:
+				this.set(Double.toString(Math.atan(data)));
+				break;
+			case 10:
+				this.set(Double.toString(Math.exp(data)));
+				break;
+			case 11:
+				this.set(Double.toString(Math.log(data)));
+				break;
+			case 12:
+				other = stack.pop();
+				stack.push(new RPLComplex("(" + other + "," + this + ")"));
+				break;
+			default:
+				stack.push(this);
+				break;
+			}
+
+		}
+		catch (Exception e) {
+			stack.push(this);
+			throw new BadOpException();
+		}
+	}
+
+	@Override
+	public RPLObject copy() {
+		RPLReal other = new RPLReal(Double.toString(data));
+		return other;
+	}
+
+}
