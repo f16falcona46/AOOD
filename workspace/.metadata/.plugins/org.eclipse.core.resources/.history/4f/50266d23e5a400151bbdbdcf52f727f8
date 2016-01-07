@@ -1,6 +1,0 @@
-import java.awt.Graphics;
-
-public abstract class CircuitComponent {
-	abstract void draw(Graphics g);
-	abstract void 
-}

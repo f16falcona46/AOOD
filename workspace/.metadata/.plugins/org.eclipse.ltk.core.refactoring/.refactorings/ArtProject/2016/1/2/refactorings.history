@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring comment="Rename type &apos;MetricConversion&apos; to &apos;ComPortSelector&apos;&#x0D;&#x0A;- Original project: &apos;ArtProject&apos;&#x0D;&#x0A;- Original element: &apos;MetricConversion&apos;&#x0D;&#x0A;- Renamed element: &apos;ComPortSelector&apos;&#x0D;&#x0A;- Update references to refactored element&#x0D;&#x0A;- Update textual occurrences in comments and strings" description="Rename type &apos;MetricConversion&apos;" flags="589830" id="org.eclipse.jdt.ui.rename.type" input="/src&lt;{MetricConversion.java[MetricConversion" matchStrategy="1" name="ComPortSelector" qualified="false" references="true" similarDeclarations="false" stamp="1452016123766" textual="false" version="1.0"/>
+</session>
