@@ -3,6 +3,7 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.GridLayout;
 import java.awt.RenderingHints;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -14,6 +15,7 @@ import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.Timer;
+import javax.swing.border.EmptyBorder;
 
 import jssc.SerialPort;
 import jssc.SerialPortException;
@@ -24,11 +26,14 @@ public class Oscilliscope {
 	private static final int SCREEN_HEIGHT = 256;
 	
 	private static class VisualizationArea extends JPanel implements ActionListener {
-		private int[] buffer;
 		private Timer refreshTimer;
+		private double height;
+		private ScopeArea area;
 		
-		VisualizationArea(int[] newbuffer) {
-			buffer = newbuffer;
+		VisualizationArea(ScopeArea newArea) {
+			area = newArea;
+			
+			height = 0;
 
 			refreshTimer = new Timer(100, this);
 			refreshTimer.setActionCommand("repaint");
@@ -37,17 +42,34 @@ public class Oscilliscope {
 		
 		@Override
 		public void paintComponent(Graphics g) {
+			System.out.println("here in visualization's paintcomponent");
 			super.paintComponent(g);
+			area.repaint();
 			double perlinZ = 0;
-			synchronized (buffer) {
-				perlinZ = buffer[0];
+			synchronized (area.buffer) {
+				perlinZ = (double)area.buffer[0]/SCREEN_HEIGHT;
 			}
-			
+			//perlinZ=height;
+			for (int i = 0; i < BYTES_PER_SCREEN; ++i) {
+				for (int j = 0; j < SCREEN_HEIGHT; ++j) {
+					//System.out.println((float)ImprovedNoise.noise((double)i/BYTES_PER_SCREEN+100, (double)j/SCREEN_HEIGHT+100, perlinZ));
+					g.setColor(new Color(Color.HSBtoRGB(
+							(float)Math.pow(ImprovedNoise.noise((double)i/BYTES_PER_SCREEN*5, (double)j/SCREEN_HEIGHT*5, perlinZ),1.5),
+							(float)ImprovedNoise.noise((double)i/BYTES_PER_SCREEN*5+10, (double)j/SCREEN_HEIGHT*5+10, perlinZ),
+							(float)ImprovedNoise.noise((double)i/BYTES_PER_SCREEN*5+100, (double)j/SCREEN_HEIGHT*5+100, perlinZ))));
+					g.fillRect(i,j,1,1);
+				}
+			}
+		}
+		
+		private static float floatClamp(float val) {
+			return Math.min(Math.max(val,0), 1);
 		}
 		
 		@Override
 		public void actionPerformed(ActionEvent ev) {
 			if (ev.getActionCommand().equals("repaint")) {
+				height = height+0.009;
 				this.repaint();
 			}
 		}
@@ -67,6 +89,7 @@ public class Oscilliscope {
 			try {
 				port.openPort();
 				port.setParams(9600, 8, 1, 0);
+				buffer = convUnsignedByteArrToIntArr(port.readBytes(1));//BYTES_PER_SCREEN));
 			} catch (SerialPortException ex) {
 				System.out.println(ex);
 				System.exit(ERROR);
@@ -80,14 +103,15 @@ public class Oscilliscope {
 		@Override
 		public void paintComponent(Graphics g) { 
 			super.paintComponent(g);
+			System.out.println("in paintcompeont");
 			try {
 				synchronized (buffer) {
-					if (port.getInputBufferBytesCount() >= BYTES_PER_SCREEN) {
-						buffer = convUnsignedByteArrToIntArr(port.readBytes(BYTES_PER_SCREEN));
+					if (port.getInputBufferBytesCount() >= 1){//BYTES_PER_SCREEN) {
+						buffer = convUnsignedByteArrToIntArr(port.readBytes(1));//BYTES_PER_SCREEN));
 						System.out.println(port.getInputBufferBytesCount());
 					}
 					if (buffer != null) {
-						for (int i = 0; i < BYTES_PER_SCREEN; ++i) {
+						for (int i = 0; i < 1;++i){//BYTES_PER_SCREEN; ++i) {
 							g.fillRect(i,SCREEN_HEIGHT-buffer[i],1,1);
 						}
 					}
@@ -113,20 +137,32 @@ public class Oscilliscope {
 	private static class ScopeWindow implements ActionListener {
 		
 		private JFrame frame;
-		private ScopeArea plane;
+		private JPanel contentPane;
+		private ScopeArea screen;
+		private VisualizationArea area;
 		
 		ScopeWindow() { //so when code is copied, old constructor isn't used by accident
 			JFrame.setDefaultLookAndFeelDecorated(false);
 			frame = new JFrame("Scope");
 			frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 			
-			plane = new ScopeArea();
-			plane.setPreferredSize(new Dimension(BYTES_PER_SCREEN, SCREEN_HEIGHT));
-			plane.repaint();
+			contentPane = new JPanel();
+			contentPane.setLayout(new GridLayout(1,2,5,5));
+			contentPane.setBorder(new EmptyBorder(0,0,0,0));
 			
-			frame.setContentPane(plane);
-			frame.pack();
+			screen = new ScopeArea();
+			screen.setPreferredSize(new Dimension(BYTES_PER_SCREEN, SCREEN_HEIGHT));
+			screen.repaint();
+			contentPane.add(screen);
+			
+			area = new VisualizationArea(screen);
+			area.setPreferredSize(new Dimension(BYTES_PER_SCREEN, SCREEN_HEIGHT));
+			area.repaint();
+			contentPane.add(area);
+			
+			frame.setContentPane(contentPane);
 			frame.setResizable(false);
+			frame.pack();
 			frame.setVisible(true);
 		}
 		
