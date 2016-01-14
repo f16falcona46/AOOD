@@ -1,0 +1,222 @@
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.GridLayout;
+import java.awt.RenderingHints;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.font.TextAttribute;
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.swing.JFrame;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.Timer;
+import javax.swing.border.EmptyBorder;
+
+import jssc.SerialPort;
+import jssc.SerialPortEvent;
+import jssc.SerialPortEventListener;
+import jssc.SerialPortException;
+import jssc.SerialPortList;
+
+public class Oscilliscope {
+	private static final int BYTES_PER_SCREEN = 256;
+	private static final int SCREEN_HEIGHT = 256;
+	
+	private static class VisualizationArea extends JPanel implements ActionListener, SerialPortEventListener {
+		private Timer refreshTimer;
+		private double height;
+		private ScopeArea area;
+		private int reading;
+		
+		VisualizationArea(ScopeArea newArea) {
+			area = newArea;
+			try {
+				area.port.addEventListener(this);
+			}
+			catch (SerialPortException ex) {
+				System.out.println("Exception in VisualizationArea constructor: "+ex);
+			}
+			
+			height = 0;
+
+			refreshTimer = new Timer(10, this);
+			refreshTimer.setActionCommand("repaint");
+			refreshTimer.start();
+		}
+		
+		@Override
+		public void serialEvent(SerialPortEvent ev) {
+			if (ev.isRXCHAR()) {
+				if (ev.getEventValue() > 0) {
+					try {
+						reading = area.port.readBytes(1)[0];
+					}
+					catch (SerialPortException ex) {
+						System.out.println("Exception in VisualizationArea: "+ex);
+					}
+				}
+			}
+		}
+		
+		@Override
+		public void paintComponent(Graphics g) {
+			System.out.println("here in visualization's paintcomponent");
+			super.paintComponent(g);
+			area.repaint();
+			double perlinZ = reading/SCREEN_HEIGHT;
+			/*
+			synchronized (area.buffer) {
+				perlinZ = (double)area.buffer[0]/SCREEN_HEIGHT;
+			}
+			*/
+			//perlinZ=height;
+			for (int i = 0; i < BYTES_PER_SCREEN; ++i) {
+				for (int j = 0; j < SCREEN_HEIGHT; ++j) {
+					//System.out.println((float)ImprovedNoise.noise((double)i/BYTES_PER_SCREEN+100, (double)j/SCREEN_HEIGHT+100, perlinZ));
+					g.setColor(new Color(Color.HSBtoRGB(
+							(float)Math.pow(ImprovedNoise.noise((double)i/BYTES_PER_SCREEN*5, (double)j/SCREEN_HEIGHT*5, perlinZ),1.5),
+							(float)ImprovedNoise.noise((double)i/BYTES_PER_SCREEN*5+10, (double)j/SCREEN_HEIGHT*5+10, perlinZ),
+							(float)ImprovedNoise.noise((double)i/BYTES_PER_SCREEN*5+100, (double)j/SCREEN_HEIGHT*5+100, perlinZ))));
+					g.fillRect(i,j,1,1);
+				}
+			}
+		}
+		
+		private static float floatClamp(float val) {
+			return Math.min(Math.max(val,0), 1);
+		}
+		
+		@Override
+		public void actionPerformed(ActionEvent ev) {
+			if (ev.getActionCommand().equals("repaint")) {
+				//height = height+0.009;
+				this.repaint();
+			}
+		}
+	}
+	
+	private static class ScopeArea extends JPanel implements ActionListener {
+		private static final long serialVersionUID = 5283408121493711494L;
+		
+		public SerialPort port;
+		public int[] buffer;
+		private Timer refreshTimer;
+		
+		ScopeArea() {
+			String[] ports = SerialPortList.getPortNames();
+			String portName = (String)JOptionPane.showInputDialog(null,"Choose COM port:","COM Ports",JOptionPane.PLAIN_MESSAGE,null,ports,null);
+			port = new SerialPort(portName);
+			try {
+				port.openPort();
+				port.setParams(9600, 8, 1, 0);
+				buffer = convUnsignedByteArrToIntArr(port.readBytes(1));//BYTES_PER_SCREEN));
+			} catch (SerialPortException ex) {
+				System.out.println(ex);
+				System.exit(ERROR);
+			}
+			setBackground(new Color(250,250,240));
+			refreshTimer = new Timer(1, this);
+			refreshTimer.setActionCommand("repaint");
+			refreshTimer.start();
+		}
+		
+		@Override
+		public void paintComponent(Graphics g) { 
+			super.paintComponent(g);
+			System.out.println("in paintcompeont");
+			/*
+			try {
+				synchronized (buffer) {
+					if (port.getInputBufferBytesCount() >= 1){//BYTES_PER_SCREEN) {
+						buffer = convUnsignedByteArrToIntArr(port.readBytes(1));//BYTES_PER_SCREEN));
+						System.out.println(port.getInputBufferBytesCount());
+					}
+					if (buffer != null) {
+						for (int i = 0; i < 1;++i){//BYTES_PER_SCREEN; ++i) {
+							g.fillRect(i,SCREEN_HEIGHT-buffer[i],1,1);
+						}
+					}
+				}
+			}
+			catch (SerialPortException ex) {
+				System.out.println(ex);
+			}
+			*/
+		}
+		
+		@Override
+		public void actionPerformed(ActionEvent ev) {
+			switch (ev.getActionCommand()) {
+				case "repaint":
+					this.repaint();
+					break;
+				default:
+					break;
+			}
+		}
+	}
+	
+	private static class ScopeWindow implements ActionListener {
+		
+		private JFrame frame;
+		private JPanel contentPane;
+		private ScopeArea screen;
+		private VisualizationArea area;
+		
+		ScopeWindow() { //so when code is copied, old constructor isn't used by accident
+			JFrame.setDefaultLookAndFeelDecorated(false);
+			frame = new JFrame("Scope");
+			frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+			
+			contentPane = new JPanel();
+			contentPane.setLayout(new GridLayout(1,2,5,5));
+			contentPane.setBorder(new EmptyBorder(0,0,0,0));
+			
+			screen = new ScopeArea();
+			screen.setPreferredSize(new Dimension(BYTES_PER_SCREEN, SCREEN_HEIGHT));
+			screen.repaint();
+			contentPane.add(screen);
+			
+			area = new VisualizationArea(screen);
+			area.setPreferredSize(new Dimension(BYTES_PER_SCREEN, SCREEN_HEIGHT));
+			area.repaint();
+			contentPane.add(area);
+			
+			frame.setContentPane(contentPane);
+			frame.setResizable(false);
+			frame.pack();
+			frame.setVisible(true);
+		}
+		
+		public void actionPerformed(ActionEvent ev) {
+			System.out.println(ev);
+		}
+	}
+	
+	private static void runGUI() {
+		JFrame.setDefaultLookAndFeelDecorated(false);
+		new ScopeWindow();
+	}
+	
+	
+	public static void main(String args[]) {
+		javax.swing.SwingUtilities.invokeLater(new Runnable() {
+			public void run() {
+				runGUI();
+			}
+		});
+	}
+	
+	private static int[] convUnsignedByteArrToIntArr(byte[] byteArr) {
+		int[] result = new int[byteArr.length];
+		for (int i = 0; i < byteArr.length; ++i) {
+			result[i] = byteArr[i]&0xFF;
+		}
+		return result;
+	}
+}

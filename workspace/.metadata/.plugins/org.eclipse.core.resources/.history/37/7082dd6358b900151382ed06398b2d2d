@@ -1,0 +1,45 @@
+import javax.swing.JOptionPane;
+
+import jssc.SerialPort;
+import jssc.SerialPortEvent;
+import jssc.SerialPortEventListener;
+import jssc.SerialPortException;
+import jssc.SerialPortList;
+
+public class PortHolder implements SerialPortEventListener {
+	private SerialPort port;
+	private int reading;
+	
+	PortHolder() {
+		String[] ports = SerialPortList.getPortNames();
+		String portName = (String)JOptionPane.showInputDialog(null,"Choose COM port:","COM Ports",JOptionPane.PLAIN_MESSAGE,null,ports,null);
+		port = new SerialPort(portName);
+		try {
+			port.openPort();
+			port.setParams(9600, 8, 1, 0);
+			port.addEventListener(this);
+		} catch (SerialPortException ex) {
+			System.out.println(ex);
+			System.exit(1);
+		}
+	}
+
+	@Override
+	public void serialEvent(SerialPortEvent ev) {
+		if (ev.isRXCHAR()) {
+			if (ev.getEventValue() > 0) {
+				try {
+					reading = port.readBytes(1)[0]&0xFF;
+					System.out.println(reading);
+				}
+				catch (SerialPortException ex) {
+					System.out.println("Exception in PortHolder serialPortEvent hander: "+ex);
+				}
+			}
+		}
+	}
+	
+	public int getReading() {
+		return reading;
+	}
+}

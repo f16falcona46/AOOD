@@ -1,0 +1,60 @@
+import java.awt.Color;
+import java.awt.Graphics;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+
+import javax.swing.JPanel;
+import javax.swing.Timer;
+
+public class VisualizationArea extends JPanel implements ActionListener {
+	private static final long serialVersionUID = 7949497226496174835L;
+	
+	private PortHolder port;
+	private int screenWidth;
+	private int screenHeight;
+	private Timer refreshTimer;
+	private double perlinZOffset;
+	
+	VisualizationArea(PortHolder newHolder, int width, int height) {
+		port = newHolder;
+		screenWidth = width;
+		screenHeight = height;
+		
+		perlinZOffset = 0;
+
+		refreshTimer = new Timer(10, this);
+		refreshTimer.setActionCommand("repaint");
+		refreshTimer.start();
+	}
+	
+	@Override
+	public void paintComponent(Graphics g) {
+		super.paintComponent(g);
+		double perlinZ = 0;
+		synchronized (port) {
+			perlinZ = (double)port.getReading()/screenHeight+perlinZOffset;
+		}
+		/*
+		synchronized (area.buffer) {
+			perlinZ = (double)area.buffer[0]/screenHeight;
+		}
+		*/
+		for (int i = 0; i < screenWidth; ++i) {
+			for (int j = 0; j < screenHeight; ++j) {
+				g.setColor(new Color(Color.HSBtoRGB(
+						(float)Math.pow(ImprovedNoise.noise((double)i/screenWidth*5, (double)j/screenHeight*5, perlinZ),1.5),
+						(float)ImprovedNoise.noise((double)i/screenWidth*5+10, (double)j/screenHeight*5+10, perlinZ),
+						(float)ImprovedNoise.noise((double)i/screenWidth*5+100, (double)j/screenHeight*5+100, perlinZ))));
+				g.fillRect(i,j,1,1);
+			}
+		}
+	}
+	
+	@Override
+	public void actionPerformed(ActionEvent ev) {
+		if (ev.getActionCommand().equals("repaint")) {
+			perlinZOffset = perlinZOffset+0.009;
+			this.repaint();
+		}
+	}
+}

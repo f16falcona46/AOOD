@@ -1,0 +1,62 @@
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.ArrayList;
+
+import javax.swing.JOptionPane;
+
+import jssc.SerialPort;
+import jssc.SerialPortEvent;
+import jssc.SerialPortEventListener;
+import jssc.SerialPortException;
+import jssc.SerialPortList;
+
+public class PortHolder implements SerialPortEventListener {
+	private SerialPort port;
+	private int reading;
+	private ArrayList<ActionListener> actionListeners;
+	
+	PortHolder() {
+		actionListeners = new ArrayList<ActionListener>();
+		String[] ports = SerialPortList.getPortNames();
+		String portName = (String)JOptionPane.showInputDialog(null,"Choose COM port:","COM Ports",JOptionPane.PLAIN_MESSAGE,null,ports,null);
+		port = new SerialPort(portName);
+		try {
+			port.openPort();
+			port.setParams(9600, 8, 1, 0);
+			port.addEventListener(this);
+		} catch (SerialPortException ex) {
+			System.out.println(ex);
+			System.exit(1);
+		}
+	}
+	
+	public void addActionListener(ActionListener acl) {
+		actionListeners.add(acl);
+	}
+	
+	private void notifyActionListeners() {
+		for (ActionListener acl : actionListeners) {
+			acl.actionPerformed(new ActionEvent(this, ActionEvent.ACTION_PERFORMED, "byte gotten"));
+		}
+	}
+	
+	@Override
+	public void serialEvent(SerialPortEvent ev) {
+		if (ev.isRXCHAR()) {
+			if (ev.getEventValue() > 0) {
+				try {
+					reading = port.readBytes(1)[0]&0xFF;
+					notifyActionListeners();
+					System.out.println(reading);
+				}
+				catch (SerialPortException ex) {
+					System.out.println("Exception in PortHolder serialPortEvent hander: "+ex);
+				}
+			}
+		}
+	}
+	
+	public int getReading() {
+		return reading;
+	}
+}
